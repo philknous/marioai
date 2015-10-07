@@ -179,8 +179,8 @@ public class ParameterContainer
         else
         {
             defaultOptionsHashMap = new HashMap<String, String>();
-            AgentsPool.setCurrentAgent(new HumanKeyboardAgent());
-            defaultOptionsHashMap.put("-ag","HumanKeyboardAgent"); //defaultOptionsHashMap.put("-agentName","NoAgent");
+            //AgentsPool.setCurrentAgent(new HumanKeyboardAgent());
+            //defaultOptionsHashMap.put("-ag","HumanKeyboardAgent"); //defaultOptionsHashMap.put("-agentName","NoAgent");
             defaultOptionsHashMap.put("-echo","off"); //defaultOptionsHashMap.put("-echo","off");
             defaultOptionsHashMap.put("-ewf","on"); //defaultOptionsHashMap.put("-exitWhenFinished","off");
             defaultOptionsHashMap.put("-fastTCP","off"); //

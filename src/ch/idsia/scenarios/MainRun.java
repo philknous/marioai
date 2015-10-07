@@ -9,9 +9,9 @@ import ch.idsia.tools.EvaluationOptions;
 import ch.idsia.tools.Evaluator;
 import ch.idsia.utils.StatisticalSummary;
 import ch.idsia.mario.simulation.SimulationOptions;
-
-import competition.icegic.peterlawford.SlowAgent;
-
+import competition.cig.robinbaumgarten.AStarAgent;
+//import edu.ou.PascualKnousAgent;
+//import edu.ou.TrainerAgent;
 /**
  * Created by IntelliJ IDEA.
  * User: Sergey Karakovskiy, firstName_at_idsia_dot_ch
@@ -22,8 +22,8 @@ import competition.icegic.peterlawford.SlowAgent;
 
 public class MainRun 
 {
-    final static int numberOfTrials = 10;
-    final static boolean scoring = false;
+    final static int numberOfTrials = 3;
+    final static boolean scoring = true;
     private static int killsSum = 0;
     private static int marioStatusSum = 0;
     private static int timeLeftSum = 0;
@@ -42,7 +42,8 @@ public class MainRun
             Evaluator evaluator = new Evaluator(evaluationOptions);
             evaluationOptions.setAgent(AgentsPool.getCurrentAgent());
 
-            while (cmdLineOptions.getNumberOfTrials() > SimulationOptions.currentTrial) {
+            //while (cmdLineOptions.getNumberOfTrials() > SimulationOptions.currentTrial) {
+            while (numberOfTrials > SimulationOptions.currentTrial) {
 //                List<EvaluationInfo> evaluationSummary;
                 System.out.println("SimulationOptions.currentTrial = " + SimulationOptions.currentTrial);
                 evaluator.evaluate();
@@ -74,8 +75,8 @@ public class MainRun
 //            AgentsPool.addAgent(new AdaptiveAgent());
 //            AgentsPool.addAgent(new AIwesome());
 //            AgentsPool.addAgent(new TutchekAgent());
-            AgentsPool.addAgent(new SlowAgent());  
-//            AgentsPool.addAgent(new AStarAgent());
+//            AgentsPool.addAgent(new TrainerAgent(new AStarAgent(), new PascualKnousAgent()));
+            AgentsPool.addAgent(new AStarAgent());
 //            AgentsPool.addAgent(new RjAgent());
 //            AgentsPool.addAgent(new SergeyKarakovskiy_JumpingAgent());
             //CIG:

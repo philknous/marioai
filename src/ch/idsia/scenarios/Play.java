@@ -7,6 +7,7 @@ import ch.idsia.ai.tasks.ProgressTask;
 import ch.idsia.ai.tasks.Task;
 import ch.idsia.tools.CmdLineOptions;
 import ch.idsia.tools.EvaluationOptions;
+import competition.cig.robinbaumgarten.AStarAgent;
 
 /**
  * Created by IntelliJ IDEA.
@@ -47,6 +48,9 @@ public class Play {
 //        options.setNumberOfTrials(1);
         options.setLevelRandSeed((int) (Math.random () * Integer.MAX_VALUE));
         options.setLevelDifficulty(3);
+        options.setNumberOfTrials(3);
+        Agent agent = new AStarAgent();
+        options.setAgent(agent);
         task.setOptions(options);
 
         System.out.println ("Score: " + task.evaluate (options.getAgent())[0]);
