@@ -131,7 +131,7 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 			fos.flush();
 			fos.close();
 			
-			fos = new FileOutputStream("AgenWeights_L2.dat");
+			fos = new FileOutputStream("AgentWeights_L2.dat");
 			oos = new ObjectOutputStream(fos);
 			oos.writeObject(secondLayerWeights);
 			oos.flush();
@@ -153,7 +153,7 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 		double[][] secondLayerWeights;
 		
 		try {
-			File weightFile = new File("layer1Weights.dat");
+			File weightFile = new File("AgentWeights_L1.dat");
 			if (weightFile.exists()) {
 				FileInputStream fis = new FileInputStream(weightFile);
 				ObjectInputStream ois = new ObjectInputStream(fis);
@@ -161,7 +161,7 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 				ois.close();
 				fis.close();
 				
-				fis = new FileInputStream("layer2Weights.dat");
+				fis = new FileInputStream("AgentWeights_L1.dat");
 				ois = new ObjectInputStream(fis);
 				secondLayerWeights = (double[][]) ois.readObject();
 				ois.close();
