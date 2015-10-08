@@ -24,21 +24,27 @@ import edu.ou.TrainerAgent;
 
 public class MainRun 
 {
-    final static int numberOfTrials = 150000;
+    final static int numberOfTrials = 2;
     final static boolean scoring = false;
     private static int killsSum = 0;
     private static int marioStatusSum = 0;
     private static int timeLeftSum = 0;
     private static int marioModeSum = 0;
     private static boolean detailedStats = false;
+    private static int initialSeed = 0;
+    private static int initialDif = 0;
 
     public static void main(String[] args) {
         CmdLineOptions cmdLineOptions = new CmdLineOptions(args);
 
-        cmdLineOptions.setVisualization(false);
-        cmdLineOptions.setMaxFPS(true);
         
-        cmdLineOptions.setLevelRandSeed(4337);
+        cmdLineOptions.setLevelDifficulty(0);
+        //cmdLineOptions.setVisualization(false);
+        //cmdLineOptions.setMaxFPS(true);
+        
+        int seed = initialSeed;
+        
+        cmdLineOptions.setLevelRandSeed(seed);
         
         EvaluationOptions evaluationOptions = cmdLineOptions;  // if none options mentioned, all defalults are used.
         createAgentsPool();
@@ -57,6 +63,8 @@ public class MainRun
             	if (SimulationOptions.currentTrial % 10 == 0) {
             		System.out.println("SimulationOptions.currentTrial = " + SimulationOptions.currentTrial);
             	}
+            	
+            	evaluationOptions.setLevelRandSeed(seed++);
                 evaluator.evaluate();
             }
 //        LOGGER.save("log.txt");
@@ -76,8 +84,8 @@ public class MainRun
             // They can be accessed by just setting the commandline property -ag to the name of desired agent.
             calledBefore = true;
             //addAgentToThePool
-            AgentsPool.addAgent(new TrainerAgent(new AStarAgent(), new PascualKnousAgent()));
-//            AgentsPool.addAgent(new PascualKnousAgent());
+//            AgentsPool.addAgent(new TrainerAgent(new AStarAgent(), new PascualKnousAgent()));
+            AgentsPool.addAgent(new PascualKnousAgent());
 //            AgentsPool.addAgent(new ForwardAgent());
 //            AgentsPool.addAgent(new ForwardJumpingAgent());
 //            AgentsPool.addAgent(new RandomAgent());
