@@ -84,8 +84,8 @@ public class MainRun
             // They can be accessed by just setting the commandline property -ag to the name of desired agent.
             calledBefore = true;
             //addAgentToThePool
-//            AgentsPool.addAgent(new TrainerAgent(new AStarAgent(), new PascualKnousAgent()));
-            AgentsPool.addAgent(new PascualKnousAgent());
+            AgentsPool.addAgent(new TrainerAgent(new AStarAgent(), new PascualKnousAgent()));
+//            AgentsPool.addAgent(new PascualKnousAgent());
 //            AgentsPool.addAgent(new ForwardAgent());
 //            AgentsPool.addAgent(new ForwardJumpingAgent());
 //            AgentsPool.addAgent(new RandomAgent());

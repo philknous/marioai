@@ -43,53 +43,23 @@ public class NeuralNet implements Serializable {
 		hiddenLayer = new double[this.numOfHiddenNeurons];
 		outputs = new double[this.numOfOutputs];
 		
-		// Load saved weights (if there are any)
-		boolean loadedWeights = false;
-		try {
-			File weightFile = new File("layer1Weights.dat");
-			if (weightFile.exists()) {
-				FileInputStream fis = new FileInputStream(weightFile);
-				ObjectInputStream ois = new ObjectInputStream(fis);
-				firstLayerWeights = (double[][]) ois.readObject();
-				ois.close();
-				fis.close();
-				
-				fis = new FileInputStream("layer2Weights.dat");
-				ois = new ObjectInputStream(fis);
-				secondLayerWeights = (double[][]) ois.readObject();
-				ois.close();
-				fis.close();
-				
-				loadedWeights = true;
+		firstLayerWeights = new double[numOfInputs][numOfHiddenNeurons];
+		secondLayerWeights = new double[numOfHiddenNeurons][numOfOutputs];
+		
+		// Initialize the weights (to random values)
+		Random rand = new Random();
+		
+		// Input to hidden layer
+		for (int from = 0; from < numOfInputs; from++) {
+			for (int to = 0; to < numOfHiddenNeurons; to++) {
+				firstLayerWeights[from][to] = rand.nextGaussian();
 			}
-			
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
 		}
 		
-		if (loadedWeights == false) {
-			firstLayerWeights = new double[numOfInputs][numOfHiddenNeurons];
-			secondLayerWeights = new double[numOfHiddenNeurons][numOfOutputs];
-			
-			// Initialize the weights (to random values)
-			Random rand = new Random();
-			
-			// Input to hidden layer
-			for (int from = 0; from < numOfInputs; from++) {
-				for (int to = 0; to < numOfHiddenNeurons; to++) {
-					firstLayerWeights[from][to] = rand.nextDouble();
-				}
-			}
-			
-			// Hidden to output layer
-			for (int from = 0; from < numOfHiddenNeurons; from++) {
-				for (int to = 0; to < numOfOutputs; to++) {
-					secondLayerWeights[from][to] = rand.nextDouble();
-				}
+		// Hidden to output layer
+		for (int from = 0; from < numOfHiddenNeurons; from++) {
+			for (int to = 0; to < numOfOutputs; to++) {
+				secondLayerWeights[from][to] = rand.nextGaussian();
 			}
 		}
 	}
@@ -132,6 +102,7 @@ public class NeuralNet implements Serializable {
 		}
 		
 		// Normalize the output
+		/*
 		double max = 0;
 		for (int i = 0; i < outputs.length; i++) {
 			if (outputs[i] > max) {
@@ -141,7 +112,7 @@ public class NeuralNet implements Serializable {
 		for (int i = 0; i < outputs.length; i++) {
 			outputs[i] /= max;
 		}
-		
+		*/
 		
 		// Check if output fired
 		checkFire(outputs);
@@ -165,29 +136,50 @@ public class NeuralNet implements Serializable {
 		// Find the output layer error
 		outputError = getError(this.outputs, targetOutput);
 		
-		// Find the hidden layer error
-		hiddenError = new double[hiddenLayer.length];
-		
-		for (int from = 0; from < hiddenLayer.length; from++) {
-			double weightedError = 0;
-			for (int to = 0; to < outputs.length; to++) {
-				weightedError += secondLayerWeights[from][to] * outputError[to];
+		// Calculate a_k
+		double[] a_k = new double[outputs.length];
+		for (int to = 0; to < a_k.length; to++) {
+			a_k[to] = 0;
+			for(int from = 0; from < hiddenLayer.length; from++) {
+				a_k[to] += secondLayerWeights[from][to] * hiddenLayer[from];
 			}
-			
-			hiddenError[from] = sigmoid(hiddenLayer[from]) * weightedError;
 		}
 		
-		// Update first layer weights
-		for (int from = 0; from < inputs.length; from++) {
-			for (int to = 0; to < hiddenLayer.length; to++) {
-				firstLayerWeights[from][to] += alpha * hiddenError[to] * inputs[from];
+		// Calculate delta for output layer
+		double[] deltaTwo = new double[outputs.length];
+		for (int i = 0; i < deltaTwo.length; i++) {
+			deltaTwo[i] = outputError[i] * sigmoidDerivative(a_k[i]);
+		}
+		
+		// Calculate a_j
+		double[] a_j = new double[hiddenLayer.length];
+		for (int to = 0; to < a_j.length; to++) {
+			a_j[to] = 0;
+			for(int from = 0; from < inputs.length; from++) {
+				a_j[to] += firstLayerWeights[from][to] * inputs[from];
 			}
+		}
+		
+		// Calculate delta for hidden layer
+		double[] deltaOne = new double[hiddenLayer.length];
+		for (int from = 0; from < deltaOne.length; from++) {
+			for (int to = 0; to < outputs.length; to++) {
+				deltaOne[from] += secondLayerWeights[from][to] * deltaTwo[to];
+			}
+			deltaOne[from] *= sigmoidDerivative(a_j[from]);
 		}
 		
 		// Update second layer weights
 		for (int from = 0; from < hiddenLayer.length; from++) {
 			for (int to = 0; to < outputs.length; to++) {
-				secondLayerWeights[from][to] += alpha * outputError[to] * hiddenLayer[from];
+				secondLayerWeights[from][to] += alpha * outputs[to] * deltaTwo[to];
+			}
+		}
+		
+		// Update first layer weights
+		for (int from = 0; from < inputs.length; from++) {
+			for (int to = 0; to < hiddenLayer.length; to++) {
+				firstLayerWeights[from][to] += alpha * inputs[from] * deltaOne[to];
 			}
 		}
 		
@@ -202,30 +194,21 @@ public class NeuralNet implements Serializable {
 		return sse;
 	}
 	
-	public void Save() {
-		FileOutputStream fos;
-		try {
-			fos = new FileOutputStream("layer1Weights.dat");
-			ObjectOutputStream oos = new ObjectOutputStream(fos);
-			oos.writeObject(firstLayerWeights);
-			oos.flush();
-			oos.close();
-			fos.flush();
-			fos.close();
-			
-			fos = new FileOutputStream("layer2Weights.dat");
-			oos = new ObjectOutputStream(fos);
-			oos.writeObject(secondLayerWeights);
-			oos.flush();
-			oos.close();
-			fos.flush();
-			fos.close();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	public double[][] GetWeights(int layer) {
+		if (layer == 1) {
+			return firstLayerWeights;
+		}
+		else {
+			return secondLayerWeights;
+		}
+	}
+	
+	public void SetWeights(int layer, double[][] weights) {
+		if (layer == 1) {
+			firstLayerWeights = weights;
+		}
+		else {
+			secondLayerWeights = weights;
 		}
 	}
 	
@@ -239,11 +222,13 @@ public class NeuralNet implements Serializable {
 		}
 	}
 	
-	private double[] getError(double[] actual, double[] desired) {
+	private double[] getError(double[] actual, double[] predicted) {
 		double[] error = new double[actual.length];
 		
 		for (int i=0; i < actual.length; i++) {
-			error[i] = sigmoid(actual[i] * (desired[i] - actual[i]));
+			//error[i] = sigmoid(actual[i] * (desired[i] - actual[i]));
+			//error[i] = Math.pow((actual[i] - predicted[i]), 2) / 2;
+			error[i] = actual[i] - predicted[i];
 		}
 		
 		return error;
@@ -251,5 +236,9 @@ public class NeuralNet implements Serializable {
 	
 	private double sigmoid(double value) {
 		return 1.0d / (1.0d + Math.exp(-value));
+	}
+	
+	private double sigmoidDerivative(double value) {
+		return sigmoid(value) * (1 - sigmoid(value));
 	}
 }

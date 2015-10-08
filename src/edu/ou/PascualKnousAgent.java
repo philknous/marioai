@@ -4,7 +4,13 @@ import ch.idsia.ai.agents.ai.BasicAIAgent;
 import ch.idsia.mario.environments.Environment;
 import sun.rmi.runtime.Log;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.logging.*;
 
 public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
@@ -42,7 +48,7 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 	@Override
 	public void reset() {
 		if (hasLearned) {
-			net.Save();
+			this.Save();
 			
 			log.info("AvgErr: " + avgError);
 			
@@ -50,6 +56,7 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 		}
 		
 		net = new NeuralNet(inputs, hiddenNeurons, outputs, alpha);
+		this.Load();
 	}
 	
 	@Override
@@ -110,4 +117,66 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 		return sceneObs[x][y] != 0 ? 1 : 0;
 	}
 	
+	private void Save() {
+		double[][] firstLayerWeights = net.GetWeights(1);
+		double[][] secondLayerWeights = net.GetWeights(2);
+		
+		FileOutputStream fos;
+		try {
+			fos = new FileOutputStream("AgentWeights_L1.dat");
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject(firstLayerWeights);
+			oos.flush();
+			oos.close();
+			fos.flush();
+			fos.close();
+			
+			fos = new FileOutputStream("AgenWeights_L2.dat");
+			oos = new ObjectOutputStream(fos);
+			oos.writeObject(secondLayerWeights);
+			oos.flush();
+			oos.close();
+			fos.flush();
+			fos.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	private void Load() {
+		// Load saved weights (if there are any)
+		double[][] firstLayerWeights;
+		double[][] secondLayerWeights;
+		
+		try {
+			File weightFile = new File("layer1Weights.dat");
+			if (weightFile.exists()) {
+				FileInputStream fis = new FileInputStream(weightFile);
+				ObjectInputStream ois = new ObjectInputStream(fis);
+				firstLayerWeights = (double[][]) ois.readObject();
+				ois.close();
+				fis.close();
+				
+				fis = new FileInputStream("layer2Weights.dat");
+				ois = new ObjectInputStream(fis);
+				secondLayerWeights = (double[][]) ois.readObject();
+				ois.close();
+				fis.close();
+				
+				net.SetWeights(1, firstLayerWeights);
+				net.SetWeights(2, secondLayerWeights);
+			}
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
 }
