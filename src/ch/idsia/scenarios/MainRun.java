@@ -10,6 +10,8 @@ import ch.idsia.tools.Evaluator;
 import ch.idsia.utils.StatisticalSummary;
 import ch.idsia.mario.simulation.SimulationOptions;
 import competition.cig.robinbaumgarten.AStarAgent;
+import edu.ou.PascualKnousAgent;
+import edu.ou.TrainerAgent;
 //import edu.ou.PascualKnousAgent;
 //import edu.ou.TrainerAgent;
 /**
@@ -22,8 +24,8 @@ import competition.cig.robinbaumgarten.AStarAgent;
 
 public class MainRun 
 {
-    final static int numberOfTrials = 3;
-    final static boolean scoring = true;
+    final static int numberOfTrials = 150000;
+    final static boolean scoring = false;
     private static int killsSum = 0;
     private static int marioStatusSum = 0;
     private static int timeLeftSum = 0;
@@ -32,6 +34,12 @@ public class MainRun
 
     public static void main(String[] args) {
         CmdLineOptions cmdLineOptions = new CmdLineOptions(args);
+
+        cmdLineOptions.setVisualization(false);
+        cmdLineOptions.setMaxFPS(true);
+        
+        cmdLineOptions.setLevelRandSeed(4337);
+        
         EvaluationOptions evaluationOptions = cmdLineOptions;  // if none options mentioned, all defalults are used.
         createAgentsPool();
 
@@ -39,13 +47,16 @@ public class MainRun
             scoreAllAgents(cmdLineOptions);
         else
         {
+
             Evaluator evaluator = new Evaluator(evaluationOptions);
             evaluationOptions.setAgent(AgentsPool.getCurrentAgent());
 
             //while (cmdLineOptions.getNumberOfTrials() > SimulationOptions.currentTrial) {
             while (numberOfTrials > SimulationOptions.currentTrial) {
 //                List<EvaluationInfo> evaluationSummary;
-                System.out.println("SimulationOptions.currentTrial = " + SimulationOptions.currentTrial);
+            	if (SimulationOptions.currentTrial % 10 == 0) {
+            		System.out.println("SimulationOptions.currentTrial = " + SimulationOptions.currentTrial);
+            	}
                 evaluator.evaluate();
             }
 //        LOGGER.save("log.txt");
@@ -65,6 +76,8 @@ public class MainRun
             // They can be accessed by just setting the commandline property -ag to the name of desired agent.
             calledBefore = true;
             //addAgentToThePool
+            AgentsPool.addAgent(new TrainerAgent(new AStarAgent(), new PascualKnousAgent()));
+//            AgentsPool.addAgent(new PascualKnousAgent());
 //            AgentsPool.addAgent(new ForwardAgent());
 //            AgentsPool.addAgent(new ForwardJumpingAgent());
 //            AgentsPool.addAgent(new RandomAgent());
@@ -75,8 +88,7 @@ public class MainRun
 //            AgentsPool.addAgent(new AdaptiveAgent());
 //            AgentsPool.addAgent(new AIwesome());
 //            AgentsPool.addAgent(new TutchekAgent());
-//            AgentsPool.addAgent(new TrainerAgent(new AStarAgent(), new PascualKnousAgent()));
-            AgentsPool.addAgent(new AStarAgent());
+//            AgentsPool.addAgent(new AStarAgent());
 //            AgentsPool.addAgent(new RjAgent());
 //            AgentsPool.addAgent(new SergeyKarakovskiy_JumpingAgent());
             //CIG:
