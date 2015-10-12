@@ -20,14 +20,14 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 	private static SimpleFormatter formatter;
 	
 	private NeuralNet net;
-	private int inputs = 12; // Don't forget the bias input!
+	private int inputs = 18; // Don't forget the bias input!
 	private int hiddenNeurons = 8;
 	private int outputs = Environment.numberOfButtons;
-	private double alpha = 0.000001; // The learning rate
+	private double alpha = 0.0001; // The learning rate
 	
 	private boolean hasLearned = false;
+	private int resets = 0;
 	
-	private int learnCount = 0;
 	private double avgError = 0;
 	
 	public PascualKnousAgent() {
@@ -42,21 +42,29 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 			e.printStackTrace();
 		}
 		
+		net = new NeuralNet(inputs, hiddenNeurons, outputs, alpha);
+		this.Load();
+		
 		reset();
 	}
 	
 	@Override
 	public void reset() {
 		if (hasLearned) {
-			this.Save();
+			
+			resets++;
+			if (resets % 50 == 0) {
+				this.Save();
+				resets = 0;
+			}
 			
 			log.info("AvgErr: " + avgError);
 			
 			hasLearned = false;
 		}
 		
-		net = new NeuralNet(inputs, hiddenNeurons, outputs, alpha);
-		this.Load();
+		//net = new NeuralNet(inputs, hiddenNeurons, outputs, alpha);
+		//this.Load();
 	}
 	
 	@Override
@@ -98,15 +106,21 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 		
 		double[] inputs = new double[] {
 				1,
+				checkScene(sceneObs, 9, 10),
 				checkScene(sceneObs, 10, 10),
 				checkScene(sceneObs, 11, 10),
 				checkScene(sceneObs, 12, 10),
+				checkScene(sceneObs, 13, 10),
+				checkScene(sceneObs, 9, 11),
 				checkScene(sceneObs, 10, 11),
 				checkScene(sceneObs, 11, 11),
 				checkScene(sceneObs, 12, 11),
+				checkScene(sceneObs, 13, 11),
+				checkScene(sceneObs, 9, 12),
 				checkScene(sceneObs, 10, 12),
 				checkScene(sceneObs, 11, 12),
 				checkScene(sceneObs, 12, 12),
+				checkScene(sceneObs, 13, 12),
 				observation.isMarioOnGround() ? 1 : 0,
 				observation.mayMarioJump() ? 1 : 0};
 		
@@ -121,23 +135,18 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 		double[][] firstLayerWeights = net.GetWeights(1);
 		double[][] secondLayerWeights = net.GetWeights(2);
 		
+		double[][][] temp = new double[][][] { firstLayerWeights, secondLayerWeights };
+		
 		FileOutputStream fos;
 		try {
-			fos = new FileOutputStream("AgentWeights_L1.dat");
+			fos = new FileOutputStream("brain.dat");
 			ObjectOutputStream oos = new ObjectOutputStream(fos);
-			oos.writeObject(firstLayerWeights);
+			oos.writeObject(temp);
 			oos.flush();
 			oos.close();
 			fos.flush();
 			fos.close();
 			
-			fos = new FileOutputStream("AgentWeights_L2.dat");
-			oos = new ObjectOutputStream(fos);
-			oos.writeObject(secondLayerWeights);
-			oos.flush();
-			oos.close();
-			fos.flush();
-			fos.close();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -149,26 +158,19 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 	
 	private void Load() {
 		// Load saved weights (if there are any)
-		double[][] firstLayerWeights;
-		double[][] secondLayerWeights;
-		
 		try {
-			File weightFile = new File("AgentWeights_L1.dat");
+			File weightFile = new File("brain.dat");
 			if (weightFile.exists()) {
+				double[][][] temp;
+				
 				FileInputStream fis = new FileInputStream(weightFile);
 				ObjectInputStream ois = new ObjectInputStream(fis);
-				firstLayerWeights = (double[][]) ois.readObject();
+				temp = (double[][][]) ois.readObject();
 				ois.close();
 				fis.close();
 				
-				fis = new FileInputStream("AgentWeights_L1.dat");
-				ois = new ObjectInputStream(fis);
-				secondLayerWeights = (double[][]) ois.readObject();
-				ois.close();
-				fis.close();
-				
-				net.SetWeights(1, firstLayerWeights);
-				net.SetWeights(2, secondLayerWeights);
+				net.SetWeights(1, temp[0]);
+				net.SetWeights(2, temp[1]);
 			}
 			
 		} catch (FileNotFoundException e) {

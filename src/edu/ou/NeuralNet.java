@@ -65,7 +65,7 @@ public class NeuralNet implements Serializable {
 	}
 	
 	/**
-	 * Propagates the input through the neural network and returs the output
+	 * Propagates the input through the neural network and returns the output
 	 * @param input The input to the network
 	 * @return The output of the network given the input
 	 */
@@ -73,6 +73,8 @@ public class NeuralNet implements Serializable {
 		if (this.inputs != input) {
 			System.arraycopy(input, 0, inputs, 0, input.length);
 		}
+		
+		checkFire(inputs);
 		
 		// Clear hidden and output layers
 		for(int i = 0; i < hiddenLayer.length; i++) {
@@ -101,19 +103,6 @@ public class NeuralNet implements Serializable {
 			}
 		}
 		
-		// Normalize the output
-		/*
-		double max = 0;
-		for (int i = 0; i < outputs.length; i++) {
-			if (outputs[i] > max) {
-				max = outputs[i];
-			}
-		}
-		for (int i = 0; i < outputs.length; i++) {
-			outputs[i] /= max;
-		}
-		*/
-		
 		// Check if output fired
 		checkFire(outputs);
 		
@@ -128,10 +117,14 @@ public class NeuralNet implements Serializable {
 	 */
 	public double Learn(double[] input, double[] targetOutput) {
 		double[] outputError;
-		double[] hiddenError;
+		double[] inputCopy = new double[input.length];
+		
+		System.arraycopy(input, 0, inputCopy, 0, input.length);
+				
+		checkFire(input);
 		
 		// Find what is the actual output
-		this.outputs = GetOutput(input);
+		this.outputs = GetOutput(inputCopy);
 		
 		// Find the output layer error
 		outputError = getError(this.outputs, targetOutput);
@@ -172,7 +165,7 @@ public class NeuralNet implements Serializable {
 		// Update second layer weights
 		for (int from = 0; from < hiddenLayer.length; from++) {
 			for (int to = 0; to < outputs.length; to++) {
-				secondLayerWeights[from][to] += alpha * outputs[to] * deltaTwo[to];
+				secondLayerWeights[from][to] += alpha * hiddenLayer[from] * deltaTwo[to];
 			}
 		}
 		
@@ -229,6 +222,7 @@ public class NeuralNet implements Serializable {
 			//error[i] = sigmoid(actual[i] * (desired[i] - actual[i]));
 			//error[i] = Math.pow((actual[i] - predicted[i]), 2) / 2;
 			error[i] = actual[i] - predicted[i];
+			//error[i] = predicted[i] - actual[i];
 		}
 		
 		return error;

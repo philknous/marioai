@@ -6,8 +6,8 @@ public class NeuralNetTest {
 	private final static int NUM_OF_INPUTS = 3;
 	private final static int NUM_OF_HIDDEN = 2;
 	private final static int NUM_OF_OUTPUTS = 1;
-	private final static double ALPHA = 0.000001;
-	private final static int TEST_RUNS = 1000000000;
+	private final static double ALPHA = 0.00001;
+	private final static int TEST_RUNS = 1000000;
 	
 	private static double avgError = 0;
 	
@@ -23,11 +23,15 @@ public class NeuralNetTest {
 		for (int i = 0; i < TEST_RUNS; i++) {
 			boolean tempInput1 = rand.nextBoolean();
 			boolean tempInput2 = rand.nextBoolean();
+			//boolean tempInput3 = rand.nextBoolean();
+			//boolean tempInput4 = rand.nextBoolean();
 			
-			boolean tempExpectedOutput = tempInput1 && tempInput2;
+			boolean tempExpectedOutput = tempInput1 && tempInput2; // && tempInput3 && tempInput4;
 
 			input[1] = tempInput1 ? 1.0 : 0.0;
 			input[2] = tempInput2 ? 1.0 : 0.0;
+			//input[3] = tempInput3 ? 1.0 : 0.0;
+			//input[4] = tempInput4 ? 1.0 : 0.0;
 			expectedOutput[0] = tempExpectedOutput ? 1.0 : 0.0;
 			
 			error = net.Learn(input, expectedOutput);
@@ -37,37 +41,61 @@ public class NeuralNetTest {
 		
 		input[1] = 1.0;
 		input[2] = 1.0;
+		//input[3] = 0.0;
+		//input[4] = 0.0;
 		
 		double[] result = net.GetOutput(input);
 		
 		System.out.println("1&&1:");
+		//System.out.println("1&&1&&0&&0:");
 		System.out.println(result[0]);
 		
 		input[1] = 1.0;
 		input[2] = 0.0;
+		//input[3] = 0.0;
+		//input[4] = 1.0;
 		
 		result = net.GetOutput(input);
 		
 		System.out.println("1&&0:");
+		//System.out.println("1&&0&&0&&1:");
 		System.out.println(result[0]);
 		
 		input[1] = 0.0;
 		input[2] = 1.0;
+		//input[3] = 0.0;
+		//input[4] = 1.0;
 		
 		result = net.GetOutput(input);
 		
 		System.out.println("0&&1:");
+		//System.out.println("0&&1&&0&&1:");
 		System.out.println(result[0]);
 		
 		input[1] = 0.0;
 		input[2] = 0.0;
+		//input[3] = 0.0;
+		//input[4] = 0.0;
 		
 		result = net.GetOutput(input);
 		
 		System.out.println("0&&0:");
+		//System.out.println("0&&0&&0&&0:");
 		System.out.println(result[0]);
 		
 		/*
+		input[1] = 1.0;
+		input[2] = 1.0;
+		//input[3] = 1.0;
+		//input[4] = 1.0;
+		
+		result = net.GetOutput(input);
+		
+		System.out.println("0&&0:");
+		//System.out.println("1&&1&&1&&1:");
+		System.out.println(result[0]);
+		
+		
 		double[][] first = net.GetWeights(1);
 		double[][] second = net.GetWeights(2);
 		

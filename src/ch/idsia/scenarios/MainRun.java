@@ -24,7 +24,7 @@ import edu.ou.TrainerAgent;
 
 public class MainRun 
 {
-    final static int numberOfTrials = 2;
+    final static int numberOfTrials = 100;
     final static boolean scoring = false;
     private static int killsSum = 0;
     private static int marioStatusSum = 0;
@@ -39,8 +39,8 @@ public class MainRun
 
         
         cmdLineOptions.setLevelDifficulty(0);
-        //cmdLineOptions.setVisualization(false);
-        //cmdLineOptions.setMaxFPS(true);
+        cmdLineOptions.setVisualization(false);
+        cmdLineOptions.setMaxFPS(true);
         
         int seed = initialSeed;
         
@@ -53,21 +53,25 @@ public class MainRun
             scoreAllAgents(cmdLineOptions);
         else
         {
-
-            Evaluator evaluator = new Evaluator(evaluationOptions);
-            evaluationOptions.setAgent(AgentsPool.getCurrentAgent());
-
-            //while (cmdLineOptions.getNumberOfTrials() > SimulationOptions.currentTrial) {
-            while (numberOfTrials > SimulationOptions.currentTrial) {
-//                List<EvaluationInfo> evaluationSummary;
-            	if (SimulationOptions.currentTrial % 10 == 0) {
-            		System.out.println("SimulationOptions.currentTrial = " + SimulationOptions.currentTrial);
-            	}
-            	
-            	evaluationOptions.setLevelRandSeed(seed++);
-                evaluator.evaluate();
-            }
-//        LOGGER.save("log.txt");
+        	for (Agent agent : AgentsPool.getAgentsCollection()) {
+        		Evaluator evaluator = new Evaluator(evaluationOptions);
+	            evaluationOptions.setAgent(agent);
+	            
+	            seed = initialSeed;
+	            evaluationOptions.setLevelRandSeed(seed++);
+	            
+	            while (numberOfTrials > SimulationOptions.currentTrial) {
+	            	if (SimulationOptions.currentTrial % 10 == 0) {
+	            		System.out.println("SimulationOptions.currentTrial = " + SimulationOptions.currentTrial);
+	            	}
+	            	
+	            	//evaluationOptions.setLevelRandSeed(seed++);
+	                evaluator.evaluate();
+	            }
+	            SimulationOptions.currentTrial = 0;
+	            evaluationOptions.setVisualization(true);
+	            evaluationOptions.setMaxFPS(true);
+        	}
         }
 
         if (cmdLineOptions.isExitProgramWhenFinished())
@@ -85,7 +89,7 @@ public class MainRun
             calledBefore = true;
             //addAgentToThePool
             AgentsPool.addAgent(new TrainerAgent(new AStarAgent(), new PascualKnousAgent()));
-//            AgentsPool.addAgent(new PascualKnousAgent());
+            AgentsPool.addAgent(new PascualKnousAgent());
 //            AgentsPool.addAgent(new ForwardAgent());
 //            AgentsPool.addAgent(new ForwardJumpingAgent());
 //            AgentsPool.addAgent(new RandomAgent());
