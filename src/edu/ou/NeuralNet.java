@@ -74,7 +74,7 @@ public class NeuralNet implements Serializable {
 			System.arraycopy(input, 0, inputs, 0, input.length);
 		}
 		
-		checkFire(inputs);
+		//checkFire(inputs);
 		
 		// Clear hidden and output layers
 		for(int i = 0; i < hiddenLayer.length; i++) {
@@ -121,13 +121,13 @@ public class NeuralNet implements Serializable {
 		
 		System.arraycopy(input, 0, inputCopy, 0, input.length);
 				
-		checkFire(input);
+		//checkFire(input);
 		
 		// Find what is the actual output
 		this.outputs = GetOutput(inputCopy);
 		
 		// Find the output layer error
-		outputError = getError(this.outputs, targetOutput);
+		outputError = getError(targetOutput, this.outputs);
 		
 		// Calculate a_k
 		double[] a_k = new double[outputs.length];
@@ -165,24 +165,23 @@ public class NeuralNet implements Serializable {
 		// Update second layer weights
 		for (int from = 0; from < hiddenLayer.length; from++) {
 			for (int to = 0; to < outputs.length; to++) {
-				secondLayerWeights[from][to] += alpha * hiddenLayer[from] * deltaTwo[to];
+				secondLayerWeights[from][to] += (alpha * hiddenLayer[from] * deltaTwo[to]);
 			}
 		}
 		
 		// Update first layer weights
 		for (int from = 0; from < inputs.length; from++) {
-			for (int to = 0; to < hiddenLayer.length; to++) {
-				firstLayerWeights[from][to] += alpha * inputs[from] * deltaOne[to];
+			for (int to = 1; to < hiddenLayer.length; to++) { // First hidden node is a bias
+				firstLayerWeights[from][to] += (alpha * inputs[from] * deltaOne[to]);
 			}
 		}
 		
 		double sse = 0;
 		for (int i = 0; i < outputs.length; i++) {
-			sse += Math.pow((targetOutput[i] - outputs[i]), 2);
+			sse += Math.pow(0.5*(targetOutput[i] - outputs[i]), 2);
 		}
 		
-		// Average the error
-		sse /= outputs.length;
+		sse = Math.sqrt(sse);
 		
 		return sse;
 	}
