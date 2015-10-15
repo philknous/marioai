@@ -1,6 +1,7 @@
 package ch.idsia.scenarios;
 
 import ch.idsia.ai.agents.ai.*;
+import ch.idsia.ai.agents.human.HumanKeyboardAgent;
 import ch.idsia.ai.agents.Agent;
 import ch.idsia.ai.agents.AgentsPool;
 import ch.idsia.tools.CmdLineOptions;
@@ -10,6 +11,8 @@ import ch.idsia.tools.Evaluator;
 import ch.idsia.utils.StatisticalSummary;
 import ch.idsia.mario.simulation.SimulationOptions;
 import competition.cig.robinbaumgarten.AStarAgent;
+import competition.cig.sergeykarakovskiy.SergeyKarakovskiy_JumpingAgent;
+import edu.ou.LearningAgent;
 import edu.ou.PascualKnousAgent;
 import edu.ou.TrainerAgent;
 //import edu.ou.PascualKnousAgent;
@@ -24,23 +27,23 @@ import edu.ou.TrainerAgent;
 
 public class MainRun 
 {
-    final static int numberOfTrials = 100;
-    final static boolean scoring = false;
+    final static int numberOfTrials = 10;
+    final static boolean scoring = true;
     private static int killsSum = 0;
     private static int marioStatusSum = 0;
     private static int timeLeftSum = 0;
     private static int marioModeSum = 0;
     private static boolean detailedStats = false;
     private static int initialSeed = 0;
-    private static int initialDif = 0;
+    private static int initialDif = 20;
 
     public static void main(String[] args) {
         CmdLineOptions cmdLineOptions = new CmdLineOptions(args);
 
         
-        cmdLineOptions.setLevelDifficulty(0);
-        cmdLineOptions.setVisualization(false);
-        cmdLineOptions.setMaxFPS(true);
+        cmdLineOptions.setLevelDifficulty(initialDif);
+        //cmdLineOptions.setVisualization(false);
+        //cmdLineOptions.setMaxFPS(true);
         
         int seed = initialSeed;
         
@@ -54,6 +57,7 @@ public class MainRun
         else
         {
         	for (Agent agent : AgentsPool.getAgentsCollection()) {
+        		        		
         		Evaluator evaluator = new Evaluator(evaluationOptions);
 	            evaluationOptions.setAgent(agent);
 	            
@@ -83,12 +87,15 @@ public class MainRun
     {
         if (!calledBefore)
         {
+        	Agent learner = new PascualKnousAgent();
             // Create an Agent here or mention the set of agents you want to be available for the framework.
             // All created agents by now are used here.
             // They can be accessed by just setting the commandline property -ag to the name of desired agent.
             calledBefore = true;
             //addAgentToThePool
-            AgentsPool.addAgent(new TrainerAgent(new AStarAgent(), new PascualKnousAgent()));
+//            AgentsPool.addAgent(new HumanKeyboardAgent());
+//            AgentsPool.addAgent(new TrainerAgent(new SergeyKarakovskiy_JumpingAgent(), (LearningAgent)learner));
+//            AgentsPool.addAgent(new TrainerAgent(new AStarAgent(), (LearningAgent)learner));
             AgentsPool.addAgent(new PascualKnousAgent());
 //            AgentsPool.addAgent(new ForwardAgent());
 //            AgentsPool.addAgent(new ForwardJumpingAgent());

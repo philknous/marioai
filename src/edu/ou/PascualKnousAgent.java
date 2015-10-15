@@ -15,15 +15,15 @@ import java.util.logging.*;
 
 public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 
-	private static Logger log = Logger.getLogger(PascualKnousAgent.class.getName());
+	private static Logger log;
 	private static FileHandler fh; 
 	private static SimpleFormatter formatter;
 	
 	private NeuralNet net;
-	private int inputs = 18; // Don't forget the bias input!
-	private int hiddenNeurons = 8;
+	private int inputs = 24; // Don't forget the bias input!
+	private int hiddenNeurons = 5;
 	private int outputs = Environment.numberOfButtons;
-	private double alpha = 0.0001; // The learning rate
+	private double alpha = 0.01; // The learning rate
 	
 	private boolean hasLearned = false;
 	private int resets = 0;
@@ -32,14 +32,20 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 	
 	public PascualKnousAgent() {
 		super("PascualKnousAgent");
-		try {
-			log.setUseParentHandlers(false);
-			fh = new FileHandler("log%u.txt", 1024000, 500);
-			log.addHandler(fh);
-			formatter = new SimpleFormatter();
-			fh.setFormatter(formatter);
-		} catch (SecurityException | IOException e) {
-			e.printStackTrace();
+		
+		if (log == null) {
+			
+			log = Logger.getLogger(PascualKnousAgent.class.getName());
+		
+			try {
+				log.setUseParentHandlers(false);
+				fh = new FileHandler("log", 1024000, 500);
+				log.addHandler(fh);
+				formatter = new SimpleFormatter();
+				fh.setFormatter(formatter);
+			} catch (SecurityException | IOException e) {
+				e.printStackTrace();
+			}
 		}
 		
 		net = new NeuralNet(inputs, hiddenNeurons, outputs, alpha);
@@ -75,7 +81,7 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 		double[] outputs = net.GetOutput(inputs);
 		
 		for (int i = 0; i < action.length; i++) {
-			action[i] = outputs[i] >= 0.70;
+			action[i] = outputs[i] > 0.50;
 		}
 		
 		return action;
@@ -106,21 +112,27 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 		
 		double[] inputs = new double[] {
 				1,
+				checkScene(sceneObs, 8, 10),
 				checkScene(sceneObs, 9, 10),
 				checkScene(sceneObs, 10, 10),
 				checkScene(sceneObs, 11, 10),
 				checkScene(sceneObs, 12, 10),
 				checkScene(sceneObs, 13, 10),
+				checkScene(sceneObs, 14, 10),
+				checkScene(sceneObs, 8, 11),
 				checkScene(sceneObs, 9, 11),
 				checkScene(sceneObs, 10, 11),
 				checkScene(sceneObs, 11, 11),
 				checkScene(sceneObs, 12, 11),
 				checkScene(sceneObs, 13, 11),
+				checkScene(sceneObs, 14, 11),
+				checkScene(sceneObs, 8, 12),
 				checkScene(sceneObs, 9, 12),
 				checkScene(sceneObs, 10, 12),
 				checkScene(sceneObs, 11, 12),
 				checkScene(sceneObs, 12, 12),
 				checkScene(sceneObs, 13, 12),
+				checkScene(sceneObs, 14, 12),
 				observation.isMarioOnGround() ? 1 : 0,
 				observation.mayMarioJump() ? 1 : 0};
 		

@@ -6,12 +6,11 @@ public class NeuralNetTest {
 	private final static int NUM_OF_INPUTS = 3;
 	private final static int NUM_OF_HIDDEN = 2;
 	private final static int NUM_OF_OUTPUTS = 1;
-	private final static double ALPHA = 0.001;
 	
 	private static double avgError = 1;
 	
-	public static boolean TestAnd() {
-		NeuralNet net = new NeuralNet(NUM_OF_INPUTS, NUM_OF_HIDDEN, NUM_OF_OUTPUTS, ALPHA);
+	public static boolean TestAnd(double alpha) {
+		NeuralNet net = new NeuralNet(NUM_OF_INPUTS, NUM_OF_HIDDEN, NUM_OF_OUTPUTS, alpha);
 		
 		avgError = 1;
 		
@@ -83,8 +82,8 @@ public class NeuralNetTest {
 		
 	}
 	
-	public static void TestXOR() {
-		NeuralNet net = new NeuralNet(NUM_OF_INPUTS, NUM_OF_HIDDEN, NUM_OF_OUTPUTS, ALPHA);
+	public static void TestXOR(double alpha) {
+		NeuralNet net = new NeuralNet(NUM_OF_INPUTS, NUM_OF_HIDDEN, NUM_OF_OUTPUTS, alpha);
 		
 		avgError = 1;
 
@@ -96,7 +95,7 @@ public class NeuralNetTest {
 		
 		int count = 0;
 		
-		while (avgError > 0.10) {
+		while (avgError > 0.025) {
 			boolean tempInput1 = rand.nextBoolean();
 			boolean tempInput2 = rand.nextBoolean();
 			
@@ -154,7 +153,7 @@ public class NeuralNetTest {
 	}
 	
 	public static void main(String[] args) {
-		TestAnd();
-		//TestXOR();
+		TestAnd(0.01);
+		//TestXOR(0.005);
 	}
 }
