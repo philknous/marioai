@@ -1,5 +1,7 @@
 package edu.ou;
 
+import java.util.Random;
+
 import ch.idsia.ai.agents.Agent;
 import ch.idsia.ai.agents.AgentsPool;
 import ch.idsia.ai.agents.ai.TimingAgent;
@@ -31,7 +33,9 @@ public class Learn {
         cmdLineOptions.setVisualization(false);
         cmdLineOptions.setMaxFPS(true);
         
-        int seed = initialSeed;
+        Random rand = new Random();
+        
+        int seed = initialSeed = rand.nextInt();
         
         cmdLineOptions.setLevelRandSeed(seed);
         
@@ -53,6 +57,10 @@ public class Learn {
             	
             	evaluationOptions.setLevelRandSeed(seed++);
                 evaluator.evaluate();
+                
+                if (SimulationOptions.currentTrial >= 100) {
+                	seed = initialSeed;
+                }
             }
             
             SimulationOptions.currentTrial = 0;
@@ -74,8 +82,8 @@ public class Learn {
             calledBefore = true;
             //addAgentToThePool
 //	            AgentsPool.addAgent(new HumanKeyboardAgent());
-	            AgentsPool.addAgent(new TrainerAgent(new SergeyKarakovskiy_JumpingAgent(), (LearningAgent)learner));
-//	            AgentsPool.addAgent(new TrainerAgent(new AStarAgent(), (LearningAgent)learner));
+//	            AgentsPool.addAgent(new TrainerAgent(new SergeyKarakovskiy_JumpingAgent(), (LearningAgent)learner));
+	            AgentsPool.addAgent(new TrainerAgent(new AStarAgent(), (LearningAgent)learner));
 //            AgentsPool.addAgent(new PascualKnousAgent());
 //	            AgentsPool.addAgent(new ForwardAgent());
 //	            AgentsPool.addAgent(new ForwardJumpingAgent());

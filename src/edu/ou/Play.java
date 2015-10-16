@@ -1,5 +1,7 @@
 package edu.ou;
 
+import java.util.Random;
+
 import ch.idsia.ai.agents.Agent;
 import ch.idsia.ai.agents.AgentsPool;
 import ch.idsia.ai.agents.ai.TimingAgent;
@@ -17,7 +19,7 @@ public class Play {
     private static int marioModeSum = 0;
     private static boolean detailedStats = false;
     private static int initialSeed = 0;
-    private static int initialDif = 20;
+    private static int initialDif = 100;
 
     public static void main(String[] args) {
         CmdLineOptions cmdLineOptions = new CmdLineOptions(args);
@@ -27,7 +29,9 @@ public class Play {
         cmdLineOptions.setVisualization(false);
         cmdLineOptions.setMaxFPS(true);
         
-        int seed = initialSeed;
+        Random rand = new Random();
+        
+        int seed = initialSeed = rand.nextInt();
         
         cmdLineOptions.setLevelRandSeed(seed);
         
@@ -58,15 +62,15 @@ public class Play {
     public static void scoreAllAgents(CmdLineOptions cmdLineOptions)
     {
         // TODO: implement sorting with respect to CompetitionScore.
-        int startingSeed = cmdLineOptions.getLevelRandSeed();
+        int startingSeed = initialSeed; //cmdLineOptions.getLevelRandSeed();
         for (Agent agent : AgentsPool.getAgentsCollection()) {
-            score(agent, startingSeed, cmdLineOptions);
+            score(agent, startingSeed, initialDif, cmdLineOptions);
         }
 
     }
 
 
-    public static void score(Agent agent, int startingSeed, CmdLineOptions cmdLineOptions) {
+    public static void score(Agent agent, int startingSeed, int difficulty, CmdLineOptions cmdLineOptions) {
         TimingAgent controller = new TimingAgent (agent);
         EvaluationOptions options = cmdLineOptions;
 
@@ -84,7 +88,7 @@ public class Play {
 //	        competitionScore += testConfig (controller, options, startingSeed, 0, false);
 //	        competitionScore += testConfig (controller, options, startingSeed, 3, false);
 //	        competitionScore += testConfig (controller, options, startingSeed, 5, false);
-        competitionScore += testConfig (controller, options, startingSeed, 10, false);
+        competitionScore += testConfig (controller, options, startingSeed, difficulty, false);
 
         System.out.println("\nCompetition score: " + competitionScore + "\n");
         System.out.println("Number of levels cleared = " + marioStatusSum);
