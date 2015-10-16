@@ -22,7 +22,7 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 	private static SSEFormatter formatter;
 	
 	private NeuralNet net;
-	private int inputs = 971; // Don't forget the bias input!
+	private int inputs = 973; // Don't forget the bias input!
 	private int hiddenNeurons = 10;
 	private int outputs = Environment.numberOfButtons;
 	private double alpha = 0.05; // The learning rate
@@ -34,6 +34,9 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 	private int jumpHeld = 0;
 	
 	private double avgError = 0;
+	
+	private float prevY = 0.0f;
+	private float prevX = 0.0f;
 	
 	public PascualKnousAgent() {
 		super("PascualKnousAgent");
@@ -136,6 +139,19 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 	private double[] buildInput(Environment observation) {
 		byte[][] sceneObs = observation.getLevelSceneObservation();
 		byte[][] enemyObs = observation.getEnemiesObservation();
+		
+		// Find Mario's Y Velocity
+		// getMarioFloatPos() ranges from 0 to 256.0.
+		// So find the difference from last frame
+		// Normalize to -1.0 to 1.0
+		// Cut that to -0.5 to 0.5 and shift it up by 0.5
+		// So no accel is 0.5, positive is up, negative is down
+		float yVel = ((prevY - observation.getMarioFloatPos()[1]) / 256 / 2) + 0.5f;
+		prevY = observation.getMarioFloatPos()[1];
+		
+		float xVel = ((prevX - observation.getMarioFloatPos()[0]) / 256 / 2) + 0.5f;
+		prevX = observation.getMarioFloatPos()[0];
+		
 		
 		double[] inputs = new double[] {
 				1, // Bias!
@@ -1063,6 +1079,8 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 				checkForEnemy(enemyObs, 19, 21),
 				checkForEnemy(enemyObs, 20, 21),
 				checkForEnemy(enemyObs, 21, 21),
+				(double)yVel,
+				(double)xVel,
 				observation.isMarioOnGround() ? 1 : 0,
 				observation.mayMarioJump() ? 1 : 0};
 		

@@ -35,7 +35,7 @@ public class Learn {
         
         Random rand = new Random();
         
-        int seed = initialSeed = rand.nextInt();
+        int seed = initialSeed;// = rand.nextInt();
         
         cmdLineOptions.setLevelRandSeed(seed);
         

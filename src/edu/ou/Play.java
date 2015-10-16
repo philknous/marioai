@@ -19,27 +19,30 @@ public class Play {
     private static int marioModeSum = 0;
     private static boolean detailedStats = false;
     private static int initialSeed = 0;
-    private static int initialDif = 100;
+    private static int initialDif = 0;
 
     public static void main(String[] args) {
         CmdLineOptions cmdLineOptions = new CmdLineOptions(args);
 
         
         cmdLineOptions.setLevelDifficulty(initialDif);
-        cmdLineOptions.setVisualization(false);
-        cmdLineOptions.setMaxFPS(true);
+        //cmdLineOptions.setVisualization(false);
+        //cmdLineOptions.setMaxFPS(true);
         
         Random rand = new Random();
         
-        int seed = initialSeed = rand.nextInt();
+        int seed = 0;//initialSeed = rand.nextInt();
         
         cmdLineOptions.setLevelRandSeed(seed);
         
         EvaluationOptions evaluationOptions = cmdLineOptions;  // if none options mentioned, all defalults are used.
         createAgentsPool();
-
-        scoreAllAgents(cmdLineOptions);
-
+        
+        for (int dif = initialDif; dif < initialDif + 10; dif++) {
+        	cmdLineOptions.setLevelDifficulty(dif);
+        	scoreAllAgents(cmdLineOptions);
+        }
+        
         if (cmdLineOptions.isExitProgramWhenFinished())
             System.exit(0);
     }
@@ -64,7 +67,7 @@ public class Play {
         // TODO: implement sorting with respect to CompetitionScore.
         int startingSeed = initialSeed; //cmdLineOptions.getLevelRandSeed();
         for (Agent agent : AgentsPool.getAgentsCollection()) {
-            score(agent, startingSeed, initialDif, cmdLineOptions);
+            score(agent, startingSeed, cmdLineOptions.getLevelDifficulty(), cmdLineOptions);
         }
 
     }
@@ -75,8 +78,8 @@ public class Play {
         EvaluationOptions options = cmdLineOptions;
 
         options.setNumberOfTrials(1);
-        options.setVisualization(true);
-        options.setMaxFPS(false);
+        //options.setVisualization(true);
+        //options.setMaxFPS(false);
         System.out.println("\nScoring controller " + agent.getName() + " with starting seed " + startingSeed);
 
         double competitionScore = 0;
