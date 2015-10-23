@@ -10,9 +10,10 @@ import ch.idsia.tools.EvaluationInfo;
 import ch.idsia.tools.EvaluationOptions;
 import ch.idsia.tools.Evaluator;
 import ch.idsia.utils.StatisticalSummary;
+import competition.cig.robinbaumgarten.AStarAgent;
 
 public class Play {
-    final static int numberOfTrials = 10;
+    final static int numberOfTrials = 2;
     private static int killsSum = 0;
     private static int marioStatusSum = 0;
     private static int timeLeftSum = 0;
@@ -59,6 +60,7 @@ public class Play {
             calledBefore = true;
             //addAgentToThePool
             AgentsPool.addAgent(new PascualKnousAgent());
+            //AgentsPool.addAgent(new AStarAgent());
         }
     }
 

@@ -17,7 +17,7 @@ import java.util.logging.*;
 
 public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 
-	private static int JUMP_DURATION = 3;
+	private static int JUMP_DURATION = 8;
 	private static Logger log;
 	private static FileHandler fh; 
 	private static SSEFormatter formatter;
@@ -34,7 +34,7 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 	private int jumpCount = 0;
 	private int jumpHeld = 0;
 	
-	private double avgError = 0;
+	private double avgError = 0.3;
 	
 	private float prevY = 0.0f;
 	private float prevX = 0.0f;

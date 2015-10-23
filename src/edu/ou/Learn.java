@@ -11,8 +11,10 @@ import ch.idsia.tools.EvaluationInfo;
 import ch.idsia.tools.EvaluationOptions;
 import ch.idsia.tools.Evaluator;
 import ch.idsia.utils.StatisticalSummary;
+import competition.cig.alexandrupaler.PalerAgent;
 import competition.cig.robinbaumgarten.AStarAgent;
 import competition.cig.sergeykarakovskiy.SergeyKarakovskiy_JumpingAgent;
+import competition.cig.sergeypolikarpov.SergeyPolikarpov_SimpleCyberNeuronAgent;
 
 public class Learn {
     final static int numberOfTrials = 1000;
@@ -22,8 +24,8 @@ public class Learn {
     private static int timeLeftSum = 0;
     private static int marioModeSum = 0;
     private static boolean detailedStats = false;
-    private static int initialSeed = 0;
-    private static int initialDif = 20;
+    private static int initialSeed = 12345;
+    private static int initialDif = 0;
 
     public static void main(String[] args) {
         CmdLineOptions cmdLineOptions = new CmdLineOptions(args);
@@ -48,26 +50,21 @@ public class Learn {
             evaluationOptions.setAgent(agent);
             
             seed = initialSeed;
-            evaluationOptions.setLevelRandSeed(seed++);
+            evaluationOptions.setLevelRandSeed(seed);
             
-            while (numberOfTrials > SimulationOptions.currentTrial) {
+            while (numberOfTrials >= SimulationOptions.currentTrial) {
             	if (SimulationOptions.currentTrial % 10 == 0) {
             		System.out.println("SimulationOptions.currentTrial = " + SimulationOptions.currentTrial);
             	}
             	
             	evaluationOptions.setLevelRandSeed(seed++);
                 evaluator.evaluate();
-                
-                if (SimulationOptions.currentTrial >= 100) {
-                	seed = initialSeed;
-                }
             }
             
             SimulationOptions.currentTrial = 0;
     	}
 
-        if (cmdLineOptions.isExitProgramWhenFinished())
-            System.exit(0);
+        System.exit(0);
     }
 
     private static boolean calledBefore = false;
@@ -84,6 +81,7 @@ public class Learn {
 //	            AgentsPool.addAgent(new HumanKeyboardAgent());
 //	            AgentsPool.addAgent(new TrainerAgent(new SergeyKarakovskiy_JumpingAgent(), (LearningAgent)learner));
 	            AgentsPool.addAgent(new TrainerAgent(new AStarAgent(), (LearningAgent)learner));
+//            AgentsPool.addAgent(new TrainerAgent(new PalerAgent(), (LearningAgent)learner));
 //            AgentsPool.addAgent(new PascualKnousAgent());
 //	            AgentsPool.addAgent(new ForwardAgent());
 //	            AgentsPool.addAgent(new ForwardJumpingAgent());
