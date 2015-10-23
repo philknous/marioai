@@ -82,6 +82,8 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 		//this.Load();
 	}
 	
+	private int coins = 0;
+	
 	@Override
 	public boolean[] getAction(Environment observation) {
 		
@@ -137,6 +139,15 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 		hasLearned = true;
 	}
 	
+	/**
+	 * Apply the reward to the previous action
+	 * @param reward - the reward for the previous action
+	 */
+	public void giveReward(int reward) {
+		// TODO: Implement backprop for rewards
+		System.out.println("Reward: " + reward);
+	}
+	
 	private double[] buildInput(Environment observation) {
 		byte[][] sceneObs = observation.getLevelSceneObservation();
 		byte[][] enemyObs = observation.getEnemiesObservation();
@@ -152,7 +163,6 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 		
 		float xVel = ((prevX - observation.getMarioFloatPos()[0]) / 256 / 2) + 0.5f;
 		prevX = observation.getMarioFloatPos()[0];
-		
 		
 		double[] inputs = new double[] {
 				1, // Bias!

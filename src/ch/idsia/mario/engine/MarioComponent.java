@@ -7,6 +7,7 @@ import ch.idsia.mario.environments.Environment;
 import ch.idsia.tools.EvaluationInfo;
 import ch.idsia.tools.GameViewer;
 import ch.idsia.tools.tcp.ServerAgent;
+import edu.ou.LearningAgent;
 
 import javax.swing.*;
 import java.awt.*;
@@ -159,6 +160,11 @@ public class MarioComponent extends JComponent implements Runnable, /*KeyListene
                 running = false;
                 break;
             }
+                        
+            if (agent instanceof LearningAgent) {
+            	int reward = buildReward();
+            	((LearningAgent)agent).giveReward(reward);
+            }
 
             boolean[] action = agent.getAction(this/*DummyEnvironment*/);
             if (action != null)
@@ -260,6 +266,31 @@ public class MarioComponent extends JComponent implements Runnable, /*KeyListene
         if (agent instanceof ServerAgent && mario.keys != null /*this will happen if client quits unexpectedly in case of Server mode*/)
             ((ServerAgent)agent).integrateEvaluationInfo(evaluationInfo);
         return evaluationInfo;
+    }
+    
+    /** Variables for calculating rewards **/
+    private int prevCoins = 0;
+    private int prevTimeLeft = -1;
+    
+    private int buildReward() {
+    	//TODO: Implement this
+    	int reward = 0;
+    	
+    	if (prevTimeLeft == -1) {
+    		prevTimeLeft = levelScene.getTimeLeft();
+    	}
+    	
+    	if (Mario.coins > prevCoins) {
+    		reward += Mario.coins - prevCoins;
+    		prevCoins = Mario.coins;
+    	}
+    	
+    	if (levelScene.getTimeLeft() < prevTimeLeft) {
+    		reward -= prevTimeLeft - levelScene.getTimeLeft();
+    		prevTimeLeft = levelScene.getTimeLeft();
+    	}
+    	
+    	return reward;
     }
 
     private void drawString(Graphics g, String text, int x, int y, int c) {

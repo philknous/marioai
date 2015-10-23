@@ -11,4 +11,10 @@ public interface LearningAgent extends Agent {
 	 * @param action - the action to be learned
 	 */
 	public void learn(Environment observation, boolean[] action);
+	
+	/**
+	 * Perform learning using the reward
+	 * @param reward
+	 */
+	public void giveReward(int reward);
 }
