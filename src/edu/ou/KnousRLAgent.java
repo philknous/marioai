@@ -13,11 +13,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.*;
 
-public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
+public class KnousRLAgent extends BasicAIAgent implements LearningAgent{
 
-	private static int JUMP_DURATION = 8;
+	private static int JUMP_DURATION = 1;
 	private static Logger log;
 	private static FileHandler fh; 
 	private static SSEFormatter formatter;
@@ -39,12 +41,22 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 	private float prevY = 0.0f;
 	private float prevX = 0.0f;
 	
-	public PascualKnousAgent() {
-		super("PascualKnousAgent");
+	private final static int MEMORY_LENGTH = 8;
+	private double[][] prevInput = new double[MEMORY_LENGTH][inputs];
+	private double[][] prevOutput = new double[MEMORY_LENGTH][outputs];
+	private int prevStart = 0;
+	private int prevEnd = 0;
+	
+	private boolean LearningEnabled = true;
+	
+	public KnousRLAgent(boolean learningEnabled) {
+		super("KnousRLAgent");
+		
+		this.LearningEnabled = learningEnabled;
 		
 		if (log == null) {
 			
-			log = Logger.getLogger(PascualKnousAgent.class.getName());
+			log = Logger.getLogger(KnousRLAgent.class.getName());
 		
 			try {
 				log.setUseParentHandlers(false);
@@ -66,17 +78,15 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 	@Override
 	public void reset() {
 		if (hasLearned) {
-			
-			resets++;
-			if (resets % 50 == 0) {
-				this.Save();
-				resets = 0;
-			}
+			this.Save();
 			
 			log.info(avgError + "\n");
 			
 			hasLearned = false;
 		}
+		
+		prevStart = 0;
+		prevEnd = 0;
 		
 		//net = new NeuralNet(inputs, hiddenNeurons, outputs, alpha);
 		//this.Load();
@@ -89,7 +99,27 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 		
 		double[] inputs = buildInput(observation);
 	
-		double[] outputs = net.GetOutput(inputs);
+		double[] outputs = new double[action.length];
+		
+		if (Math.random() < 0.0) {
+			for (int i = 0; i < outputs.length; i++) {
+				outputs[i] = Math.random();
+			}
+		}
+		else {
+			outputs = net.GetOutput(inputs);
+		}
+		
+		prevInput[prevEnd % MEMORY_LENGTH] = inputs;
+		prevOutput[prevEnd % MEMORY_LENGTH] = outputs;
+		
+		prevEnd++;
+		prevEnd %= MEMORY_LENGTH;
+		
+		if (prevEnd == prevStart) {
+			prevStart++;
+			prevStart %= MEMORY_LENGTH;
+		}
 		
 		for (int i = 0; i < action.length; i++) {
 			action[i] = outputs[i] > 0.50;
@@ -145,7 +175,41 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 	 */
 	public void giveReward(int reward) {
 		// TODO: Implement backprop for rewards
-		System.out.println("Reward: " + reward);
+		//System.out.println("Reward: " + reward);
+		if (LearningEnabled) {
+			hasLearned = true;
+			
+			double[] randomOutput = new double[action.length];
+			
+			for(int i = 0; i <= Math.abs(reward); i++) {
+				int temp = prevEnd;
+				
+				if (prevEnd < prevStart) {
+					temp += MEMORY_LENGTH;
+				}
+				
+				int power = 1;
+				
+				for (int hist = temp; hist >= prevStart; hist--) {
+					double[] outToLearn = prevOutput[hist % MEMORY_LENGTH]; 
+					
+					for (int j = 0; j < randomOutput.length; j++) {
+						randomOutput[j] = Math.random() > 0.5 ? 0.0 : 1.0;
+						//i = Math.abs(reward);
+					}
+					
+					//randomOutput[Mario.KEY_JUMP] = 1.0;
+					//randomOutput[Mario.KEY_RIGHT] = 1.0;
+					
+					if (reward < 0) {
+						outToLearn = randomOutput;
+					}
+										
+					net.Learn(prevInput[hist % MEMORY_LENGTH], outToLearn, alpha / power++);
+					
+				}
+			}
+		}
 	}
 	
 	private double[] buildInput(Environment observation) {

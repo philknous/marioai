@@ -1,5 +1,7 @@
 package edu.ou;
 
+import java.io.FileNotFoundException;
+import java.io.UnsupportedEncodingException;
 import java.util.Random;
 
 import ch.idsia.ai.agents.Agent;
@@ -17,7 +19,7 @@ import competition.cig.sergeykarakovskiy.SergeyKarakovskiy_JumpingAgent;
 import competition.cig.sergeypolikarpov.SergeyPolikarpov_SimpleCyberNeuronAgent;
 
 public class Learn {
-    final static int numberOfTrials = 1000;
+    final static int numberOfTrials = 10;
     final static boolean scoring = true;
     private static int killsSum = 0;
     private static int marioStatusSum = 0;
@@ -26,13 +28,14 @@ public class Learn {
     private static boolean detailedStats = false;
     private static int initialSeed = 12345;
     private static int initialDif = 0;
+    private static int difRange = 10;
 
     public static void main(String[] args) {
         CmdLineOptions cmdLineOptions = new CmdLineOptions(args);
 
         
         cmdLineOptions.setLevelDifficulty(initialDif);
-        cmdLineOptions.setVisualization(false);
+        //cmdLineOptions.setVisualization(false);
         cmdLineOptions.setMaxFPS(true);
         
         Random rand = new Random();
@@ -53,8 +56,15 @@ public class Learn {
             evaluationOptions.setLevelRandSeed(seed);
             
             while (numberOfTrials >= SimulationOptions.currentTrial) {
-            	if (SimulationOptions.currentTrial % 10 == 0) {
+            	if (SimulationOptions.currentTrial % 1 == 0) {
             		System.out.println("SimulationOptions.currentTrial = " + SimulationOptions.currentTrial);
+            	}
+            	
+            	if (SimulationOptions.currentTrial % 5 == 0) {
+            		//evaluationOptions.setVisualization(true);
+            	}
+            	else {
+            		//evaluationOptions.setVisualization(false);
             	}
             	
             	evaluationOptions.setLevelRandSeed(seed++);
@@ -78,9 +88,18 @@ public class Learn {
             // They can be accessed by just setting the commandline property -ag to the name of desired agent.
             calledBefore = true;
             //addAgentToThePool
+            AgentsPool.addAgent(new KnousRLAgent(true));
+            /*
+            try {
+				AgentsPool.addAgent(new RewardAgent());
+			} catch (FileNotFoundException | UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            */
 //	            AgentsPool.addAgent(new HumanKeyboardAgent());
 //	            AgentsPool.addAgent(new TrainerAgent(new SergeyKarakovskiy_JumpingAgent(), (LearningAgent)learner));
-	            AgentsPool.addAgent(new TrainerAgent(new AStarAgent(), (LearningAgent)learner));
+//	            AgentsPool.addAgent(new TrainerAgent(new AStarAgent(), (LearningAgent)learner));
 //            AgentsPool.addAgent(new TrainerAgent(new PalerAgent(), (LearningAgent)learner));
 //            AgentsPool.addAgent(new PascualKnousAgent());
 //	            AgentsPool.addAgent(new ForwardAgent());

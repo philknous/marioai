@@ -1,6 +1,8 @@
 package edu.ou;
 
 import ch.idsia.ai.agents.ai.BasicAIAgent;
+import ch.idsia.mario.engine.LevelScene;
+import ch.idsia.mario.engine.MarioComponent;
 import ch.idsia.mario.engine.sprites.Mario;
 import ch.idsia.mario.environments.Environment;
 import edu.ou.util.SSEFormatter;
@@ -13,42 +15,62 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Random;
 import java.util.logging.*;
 
-public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
+public class RewardAgent extends BasicAIAgent implements LearningAgent{
 
-	private static int JUMP_DURATION = 8;
+	private static int JUMP_DURATION = 3;
 	private static Logger log;
 	private static FileHandler fh; 
 	private static SSEFormatter formatter;
-	
 	private NeuralNet net;
 	private int inputs = 973; // Don't forget the bias input!
-	private int hiddenNeurons = 32;
+	private int hiddenNeurons = 10;
 	private int outputs = Environment.numberOfButtons;
-	private double alpha = 0.05; // The learning rate
-	
-	private boolean hasLearned = false;
+	private double alpha = .05;
+
 	private int resets = 0;
 	
 	private int jumpCount = 0;
 	private int jumpHeld = 0;
 	
-	private double avgError = 0.3;
+	private ArrayList<Double> avgReward = new ArrayList<Double>();
 	
 	private float prevY = 0.0f;
 	private float prevX = 0.0f;
 	
-	public PascualKnousAgent() {
-		super("PascualKnousAgent");
-		
+	private boolean load = false;
+	private boolean hasLearned = true;
+	
+	
+	// Class variables to keep track of mario status
+	private int myReset = 0;
+	private int marioLives = Mario.lives;
+	private int marioMode = 2;
+	
+	private float marioPosition = 0;
+	
+	private int coinsCollected = 0;
+	private int mushroomsCollected = 0;
+	private int flowersCollected = 0;
+	
+	private boolean firstRun = true;
+	
+	public RewardAgent() throws FileNotFoundException, UnsupportedEncodingException {
+		super("PascualTestAgent");
 		if (log == null) {
 			
-			log = Logger.getLogger(PascualKnousAgent.class.getName());
+			log = Logger.getLogger(RewardAgent.class.getName());
 		
 			try {
 				log.setUseParentHandlers(false);
-				fh = new FileHandler("log", 1024000, 500);
+				fh = new FileHandler("plotInfo", 1024000, 500);
 				log.addHandler(fh);
 				formatter = new SSEFormatter();
 				fh.setFormatter(formatter);
@@ -57,8 +79,12 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 			}
 		}
 		
+		
+		
 		net = new NeuralNet(inputs, hiddenNeurons, outputs, alpha);
-		this.Load();
+		
+		if(this.load == true)
+			this.Load();
 		
 		reset();
 	}
@@ -73,16 +99,25 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 				resets = 0;
 			}
 			
-			log.info(avgError + "\n");
+			double sum = 0;
+			for(double value: avgReward)
+			{
+				sum += value;
+			}
+			//System.out.println(sum);
+			log.info(sum + "\n");
+			avgReward.clear();
 			
-			hasLearned = false;
+			hasLearned = true;
+			
 		}
 		
-		//net = new NeuralNet(inputs, hiddenNeurons, outputs, alpha);
-		//this.Load();
+		// Level resets - thus reset coins collected
+		coinsCollected = 0;
+		mushroomsCollected = 0;
+		flowersCollected = 0;
+
 	}
-	
-	private int coins = 0;
 	
 	@Override
 	public boolean[] getAction(Environment observation) {
@@ -116,7 +151,112 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 			jumpHeld = 0;
 		}
 		
+		// 10 percent of the time we take a random action
+		Random r = new Random();
+		int chance = r.nextInt(100);
+		if (chance < 10)
+			action = getRandomAction(action);
+		
+		
+		learn(observation, action);
+		
 		return action;
+	}
+	
+	
+	
+	// Give reward
+	public int getReward(boolean[] action, Environment observation)
+	{
+		int reward = 0;
+		
+		// (1) Rewards for completing the level or dying
+		if(myReset < resets)
+		{
+			if(marioLives > Mario.lives)
+			{
+				System.out.println("lose");
+				reward -= 1000;
+				updateLives();
+				updateMyReset();
+			}
+			else
+			{
+				if(firstRun == true)
+						firstRun = false;
+				else
+				{
+					System.out.println("win");
+					reward += 1000;
+				}
+				
+				updateMyReset();
+			}
+		}
+
+		// (2) Reward for getting a 1up
+		if(marioLives < Mario.lives)
+		{
+			// positive reward
+			updateLives();
+		}
+		 
+		
+		// (3) Rewards for getting hit or getting big again
+		if(marioMode > observation.getMarioMode())
+		{
+			reward -= 50;
+			updateMode(observation.getMarioMode());
+		}
+		else if(marioMode < observation.getMarioMode())
+		{
+			updateMode(observation.getMarioMode());
+		}
+		
+		// (4) If mario is on ground reward him (basically don't make him jump unless he needs to)
+		if(observation.isMarioOnGround())
+			reward += 35;
+		
+		// (5) REWARDS FOR BUTTON PRESSES
+		if(action[Mario.KEY_RIGHT])
+			reward += 20;
+		if(action[Mario.KEY_JUMP])
+			reward += 35;
+		if(action[Mario.KEY_SPEED])
+			reward += 15;
+		if(action[Mario.KEY_LEFT])
+			reward -= 10;
+		
+		
+		// (6) Rewards for not moving across the map
+		if(!(observation.getMarioFloatPos()[0] > marioPosition))
+			reward -= 1;
+		else if(observation.getMarioFloatPos()[0] > marioPosition)
+			reward += 1;
+		
+		// (7) Rewards for collecting coins/mushrooms/flowers
+//		if(Mario.coins > coinsCollected)
+//		{
+//			reward += 25;
+//			updateCoins();
+//		}
+//		if(Mario.gainedMushrooms > mushroomsCollected)
+//		{
+//			reward += 1;
+//			updateMushrooms();
+//		}
+//		if(Mario.gainedFlowers > flowersCollected)
+//		{
+//			reward += 1;
+//			updateFlowers();
+//		}
+
+		
+		// Update mario's location on the map
+		updatePosition(observation.getMarioFloatPos()[0]);
+		
+		//System.out.println("Reward is:" + reward);
+		return reward;
 	}
 	
 	/**
@@ -127,25 +267,52 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 	public void learn(Environment observation, boolean[] action) {
 		double[] inputs = buildInput(observation);
 		double[] targetOutput = new double[action.length];
+
+		int reward;
 		
-		for (int i = 0; i < targetOutput.length; i++) {
+		
+		for (int i = 0; i < targetOutput.length; i++) 
+		{
 			targetOutput[i] = action[i] ? 1.0 : 0.0;
 		}
 		
-		double error = net.Learn(inputs, targetOutput);
+		// GET THE REWARD FOR THIS SET OF ACTIONS
+		reward = getReward(action, observation);
+		avgReward.add((double) reward);
+		// NOW SEND THE OUTPUTS THROUGH THE BACKPROP ALGORITHM REWARD TIMES
 		
-		avgError = avgError + 0.1 * (error - avgError);
+		// Send through reward times if reward > 0
+		if(reward >= 0)
+		{
+			for(int i = 0; i < reward; i++)
+			{
+				net.Learn(inputs, targetOutput);
+			}
+		}
 		
+		// If the reward is negative get random outputs to send through the backprop
+		else
+		{
+			reward = Math.abs(reward);
+			
+			for(int i = 0; i < reward; i++)
+			{
+				action = getRandomAction(action);
+				for (int j = 0; j < targetOutput.length; j++) 
+				{
+					targetOutput[j] = 0.0;
+				}
+				
+				targetOutput[Mario.KEY_JUMP] = 1.0;
+				targetOutput[Mario.KEY_RIGHT] = 1.0;
+				
+				net.Learn(inputs, targetOutput);
+			}
+			
+		}
+
+		// Now keep a record of this reward vector for this iteration
 		hasLearned = true;
-	}
-	
-	/**
-	 * Apply the reward to the previous action
-	 * @param reward - the reward for the previous action
-	 */
-	public void giveReward(int reward) {
-		// TODO: Implement backprop for rewards
-		System.out.println("Reward: " + reward);
 	}
 	
 	private double[] buildInput(Environment observation) {
@@ -163,6 +330,7 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 		
 		float xVel = ((prevX - observation.getMarioFloatPos()[0]) / 256 / 2) + 0.5f;
 		prevX = observation.getMarioFloatPos()[0];
+		
 		
 		double[] inputs = new double[] {
 				1, // Bias!
@@ -1142,6 +1310,146 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 		return inputs;
 	}
 	
+	private boolean[] getRandomAction(boolean[] action)
+	{
+		// ACTIONS
+		// left - 0
+		// right - 1
+		// down - 2
+		// jump - 3
+		// speed - 4
+		
+		Random r = new Random();
+		
+		int chance = r.nextInt(10);
+		if(chance == 0 || chance == 1)
+		{
+			action[0] = true;
+			action[1] = false;
+			action[2] = false;
+			action[3] = false;
+			action[4] = false;
+		}
+		
+		if(chance == 2 || chance == 3)
+		{
+			action[0] = false;
+			action[1] = true;
+			action[2] = false;
+			action[3] = false;
+			action[4] = false;
+		}
+		
+		if(chance == 4 || chance == 5)
+		{
+			action[0] = false;
+			action[1] = false;
+			action[2] = true;
+			action[3] = false;
+			action[4] = false;
+		}
+		
+		if(chance == 6 || chance == 7)
+		{
+			action[0] = false;
+			action[1] = false;
+			action[2] = false;
+			action[3] = true;
+			action[4] = false;
+		}
+		
+		else if(chance == 8 || chance == 9)
+		{
+			action[0] = false;
+			action[1] = false;
+			action[2] = false;
+			action[3] = false;
+			action[4] = true;
+		}
+		
+		
+		//////////////
+		// THE FOLLOWING CODE GIVES A 50/50 CHANCE TO PRESS EACH BUTTON
+		// DECIDED NOT TO USE AS OF NOW
+		/*
+		// Create an array of 0 or 1 to represent the random actions
+		int[] chance = new int[5];
+		
+		for(int i = 0; i < 5; i++)
+		{
+			chance[i] = r.nextInt(2);
+		}
+
+		// If array position is 0, set that action to false
+		// Otherwise set it to true
+		
+		// Mario Left
+		if(chance[0] == 0)
+			action[0] = false;
+		else
+			action[0] = true;
+		// Mario Right
+		if(chance[1] == 0)
+			action[1] = false;
+		else
+			action[1] = true;
+		// Mario Down
+		if(chance[2] == 0)
+			action[2] = false;
+		else
+			action[2] = true;
+		// Mario Jump
+		if(chance[3] == 0)
+			action[3] = false;
+		else
+			action[3] = true;
+		// Mario Speed
+		if(chance[4] == 0)
+			action[4] = false;
+		else
+			action[4] = true;
+*/
+		
+		
+		return action;
+	}
+	
+	private void updateMode(int newMode)
+	{
+		marioMode = newMode;
+	}
+	
+	private void updatePosition(float newPosition)
+	{
+		if(newPosition > marioPosition)
+			marioPosition = newPosition;
+	}
+
+	private void updateMyReset()
+	{
+		myReset = resets;
+	}
+	
+	private void updateLives()
+	{
+		marioLives = Mario.lives;
+	}
+	
+	private void updateCoins()
+	{
+		coinsCollected = Mario.coins;
+	}
+	
+	private void updateMushrooms()
+	{
+		mushroomsCollected = Mario.gainedMushrooms;
+	}
+	
+	private void updateFlowers()
+	{
+		flowersCollected = Mario.gainedFlowers;
+	}
+	
 	private double checkScene(byte[][] sceneObs, int x, int y) {
 		return sceneObs[x][y] != 0 ? 1 : 0;
 	}
@@ -1199,5 +1507,11 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public void giveReward(int reward) {
+		// TODO Auto-generated method stub
+		
 	}
 }

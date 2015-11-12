@@ -1,5 +1,7 @@
 package edu.ou;
 
+import java.io.FileNotFoundException;
+import java.io.UnsupportedEncodingException;
 import java.util.Random;
 
 import ch.idsia.ai.agents.Agent;
@@ -27,8 +29,8 @@ public class Play {
 
         
         cmdLineOptions.setLevelDifficulty(initialDif);
-        //cmdLineOptions.setVisualization(false);
-        //cmdLineOptions.setMaxFPS(true);
+        cmdLineOptions.setVisualization(false);
+        cmdLineOptions.setMaxFPS(true);
         
         Random rand = new Random();
         
@@ -59,7 +61,16 @@ public class Play {
             // They can be accessed by just setting the commandline property -ag to the name of desired agent.
             calledBefore = true;
             //addAgentToThePool
-            AgentsPool.addAgent(new PascualKnousAgent());
+            //AgentsPool.addAgent(new PascualKnousAgent());
+            AgentsPool.addAgent(new KnousRLAgent(true));
+            /*
+            try {
+				AgentsPool.addAgent(new RewardAgent());
+			} catch (FileNotFoundException | UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            */
             //AgentsPool.addAgent(new AStarAgent());
         }
     }

@@ -109,13 +109,17 @@ public class NeuralNet implements Serializable {
 		return outputs;
 	}
 	
+	public double Learn(double[] input, double[] targetOutput) {
+		return Learn(input, targetOutput, alpha);
+	}
+	
 	/**
 	 * Learns based on the given input and target output
 	 * @param input The input for which to learn
 	 * @param targetOutput The correct output for the given input
 	 * @return The summed squared error
 	 */
-	public double Learn(double[] input, double[] targetOutput) {
+	public double Learn(double[] input, double[] targetOutput, double rate) {
 		double[] outputError;
 		double[] inputCopy = new double[input.length];
 		

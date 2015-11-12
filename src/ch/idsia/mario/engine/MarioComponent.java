@@ -7,6 +7,7 @@ import ch.idsia.mario.environments.Environment;
 import ch.idsia.tools.EvaluationInfo;
 import ch.idsia.tools.GameViewer;
 import ch.idsia.tools.tcp.ServerAgent;
+import competition.cig.andysloane.MarioState;
 import edu.ou.LearningAgent;
 
 import javax.swing.*;
@@ -271,9 +272,11 @@ public class MarioComponent extends JComponent implements Runnable, /*KeyListene
     /** Variables for calculating rewards **/
     private int prevCoins = 0;
     private int prevTimeLeft = -1;
+    private float prevX = 0;
+    private int prevLives = 0;
+    private int prevMode = 0;
     
     private int buildReward() {
-    	//TODO: Implement this
     	int reward = 0;
     	
     	if (prevTimeLeft == -1) {
@@ -285,9 +288,34 @@ public class MarioComponent extends JComponent implements Runnable, /*KeyListene
     		prevCoins = Mario.coins;
     	}
     	
+    	if (levelScene.mario.x > prevX) {
+    		reward += 5;
+    	}
+    	if (levelScene.mario.x <= prevX) {
+    		reward -= 5;
+    	}
+    	
+    	prevX = levelScene.mario.x;
+    	
     	if (levelScene.getTimeLeft() < prevTimeLeft) {
-    		reward -= prevTimeLeft - levelScene.getTimeLeft();
+    		reward -= 1 * (prevTimeLeft - levelScene.getTimeLeft());
     		prevTimeLeft = levelScene.getTimeLeft();
+    	}
+    	
+    	if (Mario.lives < prevLives) {
+    		reward -= 50;
+    		prevLives = Mario.lives;
+    	}
+    	else {
+    		prevLives = Mario.lives;
+    	}
+    	
+    	if (levelScene.mario.getMode() < prevMode) {
+    		reward -= 10;
+    		prevMode = levelScene.mario.getMode();
+    	}
+    	else {
+    		prevMode = levelScene.mario.getMode();
     	}
     	
     	return reward;
