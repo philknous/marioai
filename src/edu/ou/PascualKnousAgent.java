@@ -145,7 +145,7 @@ public class PascualKnousAgent extends BasicAIAgent implements LearningAgent{
 	 */
 	public void giveReward(int reward) {
 		// TODO: Implement backprop for rewards
-		System.out.println("Reward: " + reward);
+		//System.out.println("Reward: " + reward);
 	}
 	
 	private double[] buildInput(Environment observation) {
